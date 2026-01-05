@@ -1,16 +1,14 @@
 {
   "version": 2,
-  "name": "family-budget",
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
-  ],
+  "name": "family-budget-pro-ai",
   "routes": [
     {
+      "src": "/",
+      "dest": "/index-pro-phase2.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/$1"
     }
   ]
 }
