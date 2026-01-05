@@ -550,6 +550,9 @@
             settings.classList.toggle('hidden');
         }
 
+        // Expose functions to window for onclick handlers
+        window.toggleForecastSettings = toggleForecastSettings;
+
         // Get monthly data
         function getMonthlyData() {
             const monthlyData = {};
@@ -770,6 +773,10 @@
             populateMonthFilter();
             updateForecast();
         }
+
+        // Expose functions to window for onclick handlers
+        window.updateForecast = updateForecast;
+        window.deleteTransaction = deleteTransaction;
 
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
