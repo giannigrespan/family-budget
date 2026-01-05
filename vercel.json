@@ -1,16 +1,32 @@
 {
   "version": 2,
-  "name": "family-budget",
+  "name": "family-budget-pro",
   "builds": [
     {
-      "src": "index.html",
+      "src": "index-pro-phase1.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "app-pro.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "manifest.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "service-worker.js",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/index-pro-phase1.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/$1"
     }
   ]
 }
