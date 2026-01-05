@@ -198,13 +198,34 @@
 
         // Initialize app
         async function initApp() {
-            updateStorageIndicator();
-            await loadData();
-            setupEventListeners();
-            updateCategorySelect();
-            renderAll();
-            setTodayDate();
-            populateMonthFilter();
+            try {
+                console.log('🚀 Inizializzazione app...');
+                updateStorageIndicator();
+                console.log('✅ Storage indicator aggiornato');
+
+                await loadData();
+                console.log('✅ Dati caricati');
+
+                setupEventListeners();
+                console.log('✅ Event listeners configurati');
+
+                updateCategorySelect();
+                console.log('✅ Categorie aggiornate');
+
+                renderAll();
+                console.log('✅ Rendering completato');
+
+                setTodayDate();
+                console.log('✅ Data impostata');
+
+                populateMonthFilter();
+                console.log('✅ Filtro mesi popolato');
+
+                console.log('🎉 App inizializzata con successo!');
+            } catch (error) {
+                console.error('❌ Errore durante l\'inizializzazione:', error);
+                alert('Errore durante l\'inizializzazione dell\'app. Controlla la console per dettagli.');
+            }
         }
 
         // Update storage indicator
@@ -784,6 +805,13 @@
         // Expose functions to window for onclick handlers
         window.updateForecast = updateForecast;
         window.deleteTransaction = deleteTransaction;
+
+        // Verify functions are exposed
+        console.log('🔧 Funzioni globali esposte:', {
+            toggleForecastSettings: typeof window.toggleForecastSettings,
+            updateForecast: typeof window.updateForecast,
+            deleteTransaction: typeof window.deleteTransaction
+        });
 
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);

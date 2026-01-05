@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Click</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-4">Test Funzionalità Click</h1>
+
+        <div class="space-y-4">
+            <button onclick="testClick1()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Test Click 1 (window function)
+            </button>
+
+            <button id="testBtn2" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                Test Click 2 (addEventListener)
+            </button>
+
+            <button onclick="deleteTest(123)" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                Test Delete Function
+            </button>
+
+            <div id="result" class="mt-4 p-4 bg-gray-100 rounded min-h-[100px]">
+                I risultati appariranno qui...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test function 1
+        function testClick1() {
+            document.getElementById('result').innerHTML =
+                '<p class="text-green-600 font-bold">✅ Click 1 funziona!</p>';
+            console.log('Test 1 eseguito');
+        }
+
+        // Test function 2
+        function testClick2() {
+            document.getElementById('result').innerHTML =
+                '<p class="text-green-600 font-bold">✅ Click 2 funziona!</p>';
+            console.log('Test 2 eseguito');
+        }
+
+        // Test delete function
+        function deleteTest(id) {
+            document.getElementById('result').innerHTML =
+                `<p class="text-green-600 font-bold">✅ Delete funziona con ID: ${id}</p>`;
+            console.log('Delete test eseguito con ID:', id);
+        }
+
+        // Expose functions to window
+        window.testClick1 = testClick1;
+        window.testClick2 = testClick2;
+        window.deleteTest = deleteTest;
+
+        // Add event listener to second button
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('testBtn2').addEventListener('click', testClick2);
+            console.log('✅ Event listeners configurati');
+        });
+    </script>
+</body>
+</html>
