@@ -7,6 +7,35 @@
 const N8N_WEBHOOK_URL = 'https://n8n.srv1194161.hstgr.cloud/webhook/family-budget';
 const USE_N8N_STORAGE = true;
 
+// Storage API Polyfill (uses localStorage)
+if (!window.storage) {
+    window.storage = {
+        async get(key) {
+            try {
+                const value = localStorage.getItem(key);
+                return value ? { value } : null;
+            } catch (error) {
+                console.error('Storage get error:', error);
+                return null;
+            }
+        },
+        async set(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (error) {
+                console.error('Storage set error:', error);
+            }
+        },
+        async remove(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) {
+                console.error('Storage remove error:', error);
+            }
+        }
+    };
+}
+
 // Categories
 const INCOME_CATEGORIES = [
     { name: 'Stipendio', icon: '💼' },
@@ -43,7 +72,264 @@ let trendChart = null;
 let currentTab = 'dashboard';
 let deferredPrompt = null;
 
+// Multi-User State
+let currentUser = null;
+let users = [];
+
 console.log('Budget Familiare Pro - Phase 1 Loading...');
+
+// ============================================
+// MULTI-USER MANAGEMENT
+// ============================================
+
+async function loadUsers() {
+    try {
+        const result = await window.storage.get('family-budget-users');
+        if (result && result.value) {
+            users = JSON.parse(result.value);
+        } else {
+            // Initialize with default users
+            users = [
+                { id: 'user1', name: 'Utente 1', icon: '👤', color: '#3b82f6' },
+                { id: 'user2', name: 'Utente 2', icon: '👥', color: '#8b5cf6' }
+            ];
+            await saveUsers();
+        }
+    } catch (error) {
+        console.log('Error loading users, creating defaults');
+        users = [
+            { id: 'user1', name: 'Utente 1', icon: '👤', color: '#3b82f6' },
+            { id: 'user2', name: 'Utente 2', icon: '👥', color: '#8b5cf6' }
+        ];
+    }
+}
+
+async function saveUsers() {
+    try {
+        await window.storage.set('family-budget-users', JSON.stringify(users));
+    } catch (error) {
+        console.error('Error saving users:', error);
+    }
+}
+
+async function loadCurrentUser() {
+    try {
+        const result = await window.storage.get('family-budget-current-user');
+        if (result && result.value) {
+            currentUser = result.value;
+        } else {
+            // Set first user as default
+            currentUser = users[0]?.id || 'user1';
+            await saveCurrentUser();
+        }
+    } catch (error) {
+        currentUser = users[0]?.id || 'user1';
+    }
+}
+
+async function saveCurrentUser() {
+    try {
+        await window.storage.set('family-budget-current-user', currentUser);
+    } catch (error) {
+        console.error('Error saving current user:', error);
+    }
+}
+
+async function switchUser(userId) {
+    if (currentUser === userId) return;
+
+    currentUser = userId;
+    await saveCurrentUser();
+
+    // Reload all data for the new user
+    await loadAllData();
+    renderAll();
+    updateUserIndicator();
+
+    const user = users.find(u => u.id === userId);
+    showNotification(`Passato a ${user?.name || 'Utente'}`, 'success');
+}
+
+function updateUserIndicator() {
+    const user = users.find(u => u.id === currentUser);
+    if (!user) return;
+
+    const indicator = document.getElementById('currentUserIndicator');
+    if (indicator) {
+        indicator.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span style="font-size: 1.5rem">${user.icon}</span>
+                <span class="font-semibold">${user.name}</span>
+            </div>
+        `;
+    }
+}
+
+function renderUserSelector() {
+    const selector = document.getElementById('userSelector');
+    if (!selector) return;
+
+    selector.innerHTML = users.map(user => `
+        <button
+            onclick="switchUser('${user.id}')"
+            class="px-4 py-2 rounded-lg transition ${currentUser === user.id ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+        >
+            <span class="text-xl">${user.icon}</span>
+            <span class="ml-2">${user.name}</span>
+        </button>
+    `).join('');
+}
+
+function openUserManagement() {
+    const modal = document.getElementById('userManagementModal');
+    if (modal) {
+        renderUserManagementList();
+        modal.classList.add('active');
+    }
+}
+
+function closeUserManagement() {
+    const modal = document.getElementById('userManagementModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function renderUserManagementList() {
+    const list = document.getElementById('userManagementList');
+    if (!list) return;
+
+    list.innerHTML = users.map(user => `
+        <div class="flex items-center justify-between p-4 card rounded-lg mb-2">
+            <div class="flex items-center gap-3">
+                <span style="font-size: 2rem">${user.icon}</span>
+                <div>
+                    <div class="font-semibold">${user.name}</div>
+                    <div class="text-sm" style="color: var(--text-secondary)">ID: ${user.id}</div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button
+                    onclick="editUser('${user.id}')"
+                    class="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm"
+                >
+                    ✏️ Modifica
+                </button>
+                ${users.length > 1 ? `
+                    <button
+                        onclick="deleteUser('${user.id}')"
+                        class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+                    >
+                        🗑️ Elimina
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddUser() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+        document.getElementById('newUserName').value = '';
+        document.getElementById('newUserIcon').value = '👤';
+        modal.classList.add('active');
+    }
+}
+
+function closeAddUser() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+async function handleAddUser(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('newUserName').value.trim();
+    const icon = document.getElementById('newUserIcon').value.trim() || '👤';
+
+    if (!name) {
+        showNotification('Inserisci un nome per l\'utente', 'error');
+        return;
+    }
+
+    const newUser = {
+        id: 'user' + Date.now(),
+        name: name,
+        icon: icon,
+        color: '#' + Math.floor(Math.random()*16777215).toString(16)
+    };
+
+    users.push(newUser);
+    await saveUsers();
+
+    closeAddUser();
+    renderUserManagementList();
+    renderUserSelector();
+
+    showNotification(`Utente "${name}" creato! 🎉`, 'success');
+}
+
+async function deleteUser(userId) {
+    if (users.length <= 1) {
+        showNotification('Non puoi eliminare l\'ultimo utente!', 'error');
+        return;
+    }
+
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    if (!confirm(`Sei sicuro di voler eliminare "${user.name}"? Tutti i suoi dati verranno persi!`)) {
+        return;
+    }
+
+    // Remove user
+    users = users.filter(u => u.id !== userId);
+    await saveUsers();
+
+    // If deleted user was current, switch to first available
+    if (currentUser === userId) {
+        await switchUser(users[0].id);
+    }
+
+    // Clean up user data
+    try {
+        await window.storage.remove(`family-budget-budgets-${userId}`);
+        await window.storage.remove(`family-budget-goals-${userId}`);
+        await window.storage.remove(`family-budget-recurring-${userId}`);
+    } catch (error) {
+        console.error('Error cleaning user data:', error);
+    }
+
+    renderUserManagementList();
+    renderUserSelector();
+
+    showNotification(`Utente "${user.name}" eliminato`, 'success');
+}
+
+function editUser(userId) {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const newName = prompt('Nuovo nome:', user.name);
+    if (!newName || newName.trim() === '') return;
+
+    const newIcon = prompt('Nuova icona (emoji):', user.icon);
+
+    user.name = newName.trim();
+    if (newIcon && newIcon.trim() !== '') {
+        user.icon = newIcon.trim();
+    }
+
+    saveUsers();
+    renderUserManagementList();
+    renderUserSelector();
+    updateUserIndicator();
+
+    showNotification(`Utente aggiornato! ✅`, 'success');
+}
 
 // ============================================
 // INITIALIZATION
@@ -54,6 +340,13 @@ document.addEventListener('DOMContentLoaded', initApp);
 async function initApp() {
     console.log('Initializing Budget Familiare Pro...');
     updateStorageIndicator();
+
+    // Load users first
+    await loadUsers();
+    await loadCurrentUser();
+    updateUserIndicator();
+    renderUserSelector();
+
     await loadAllData();
     setupEventListeners();
     updateCategorySelect();
@@ -82,13 +375,18 @@ async function loadData() {
             const response = await fetch(N8N_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ operation: 'load' })
+                body: JSON.stringify({
+                    operation: 'load',
+                    user: currentUser
+                })
             });
-            
+
             if (!response.ok) throw new Error('Failed to load from n8n');
-            
+
             const data = await response.json();
-            transactions = data.transactions || [];
+            // Filter transactions for current user
+            const allTransactions = data.transactions || [];
+            transactions = allTransactions.filter(t => t.user === currentUser);
         } catch (error) {
             console.error('Error loading transactions:', error);
             showNotification('Errore nel caricamento delle transazioni', 'error');
@@ -96,7 +394,7 @@ async function loadData() {
         }
     } else {
         try {
-            const result = await window.storage.get('family-budget-transactions');
+            const result = await window.storage.get(`family-budget-transactions-${currentUser}`);
             if (result && result.value) {
                 transactions = JSON.parse(result.value);
             }
@@ -109,7 +407,7 @@ async function loadData() {
 
 async function loadBudgets() {
     try {
-        const result = await window.storage.get('family-budget-budgets');
+        const result = await window.storage.get(`family-budget-budgets-${currentUser}`);
         if (result && result.value) {
             budgets = JSON.parse(result.value);
         }
@@ -121,7 +419,7 @@ async function loadBudgets() {
 
 async function loadGoals() {
     try {
-        const result = await window.storage.get('family-budget-goals');
+        const result = await window.storage.get(`family-budget-goals-${currentUser}`);
         if (result && result.value) {
             goals = JSON.parse(result.value);
         }
@@ -133,7 +431,7 @@ async function loadGoals() {
 
 async function loadRecurringTransactions() {
     try {
-        const result = await window.storage.get('family-budget-recurring');
+        const result = await window.storage.get(`family-budget-recurring-${currentUser}`);
         if (result && result.value) {
             recurringTransactions = JSON.parse(result.value);
         }
@@ -148,7 +446,7 @@ async function saveData() {
         return; // Handled per transaction
     } else {
         try {
-            await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
+            await window.storage.set(`family-budget-transactions-${currentUser}`, JSON.stringify(transactions));
         } catch (error) {
             console.error('Error saving data:', error);
             showNotification('Errore nel salvare i dati', 'error');
@@ -158,7 +456,7 @@ async function saveData() {
 
 async function saveBudgets() {
     try {
-        await window.storage.set('family-budget-budgets', JSON.stringify(budgets));
+        await window.storage.set(`family-budget-budgets-${currentUser}`, JSON.stringify(budgets));
     } catch (error) {
         console.error('Error saving budgets:', error);
         showNotification('Errore nel salvare i budget', 'error');
@@ -167,7 +465,7 @@ async function saveBudgets() {
 
 async function saveGoals() {
     try {
-        await window.storage.set('family-budget-goals', JSON.stringify(goals));
+        await window.storage.set(`family-budget-goals-${currentUser}`, JSON.stringify(goals));
     } catch (error) {
         console.error('Error saving goals:', error);
         showNotification('Errore nel salvare gli obiettivi', 'error');
@@ -176,7 +474,7 @@ async function saveGoals() {
 
 async function saveRecurringTransactions() {
     try {
-        await window.storage.set('family-budget-recurring', JSON.stringify(recurringTransactions));
+        await window.storage.set(`family-budget-recurring-${currentUser}`, JSON.stringify(recurringTransactions));
     } catch (error) {
         console.error('Error saving recurring:', error);
         showNotification('Errore nel salvare le ricorrenze', 'error');
@@ -241,14 +539,15 @@ function updateCategorySelect() {
 
 async function handleAddTransaction(e) {
     e.preventDefault();
-    
+
     const transaction = {
         id: Date.now(),
         type: document.querySelector('input[name="type"]:checked').value,
         description: document.getElementById('description').value,
         amount: parseFloat(document.getElementById('amount').value),
         category: document.getElementById('category').value,
-        date: document.getElementById('date').value
+        date: document.getElementById('date').value,
+        user: currentUser
     };
 
     // Handle recurring
@@ -273,12 +572,13 @@ async function handleAddTransaction(e) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     operation: 'save',
-                    transaction: transaction
+                    transaction: transaction,
+                    user: currentUser
                 })
             });
-            
+
             if (!response.ok) throw new Error('Failed to save');
-            
+
             transactions.unshift(transaction);
             showNotification('Transazione aggiunta! ✅', 'success');
         } catch (error) {
@@ -291,7 +591,7 @@ async function handleAddTransaction(e) {
         await saveData();
         showNotification('Transazione aggiunta! ✅', 'success');
     }
-    
+
     document.getElementById('transactionForm').reset();
     setTodayDate();
     updateCategorySelect();
