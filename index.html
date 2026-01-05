@@ -251,9 +251,9 @@
             } else {
                 // Load from local storage
                 try {
-                    const result = await window.storage.get('family-budget-transactions');
-                    if (result && result.value) {
-                        transactions = JSON.parse(result.value);
+                    const data = localStorage.getItem('family-budget-transactions');
+                    if (data) {
+                        transactions = JSON.parse(data);
                     }
                 } catch (error) {
                     console.log('No previous data found, starting fresh');
@@ -271,7 +271,7 @@
             } else {
                 // Save to local storage
                 try {
-                    await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
+                    localStorage.setItem('family-budget-transactions', JSON.stringify(transactions));
                 } catch (error) {
                     console.error('Error saving data:', error);
                     alert('Errore nel salvare i dati');
