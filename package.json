@@ -1,0 +1,13 @@
+{
+  "name": "family-budget",
+  "version": "1.0.0",
+  "description": "Applicazione per la gestione del budget familiare",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": ["budget", "family", "finance", "n8n", "google-sheets"],
+  "author": "Gianni",
+  "license": "MIT"
+}

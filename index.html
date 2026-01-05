@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Applicazione per la gestione del budget familiare con sincronizzazione Google Sheets">
+    <title>Budget Familiare</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">💰 Gestione Budget Familiare</h1>
+                    <p class="text-gray-600">Tieni sotto controllo entrate e uscite della tua famiglia</p>
+                </div>
+                <div id="storageIndicator" class="text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-green-500 rounded-lg shadow-md p-6 text-white">
+                <div class="text-sm opacity-90">Entrate Totali</div>
+                <div class="text-3xl font-bold" id="totalIncome">€0.00</div>
+            </div>
+            <div class="bg-red-500 rounded-lg shadow-md p-6 text-white">
+                <div class="text-sm opacity-90">Spese Totali</div>
+                <div class="text-3xl font-bold" id="totalExpenses">€0.00</div>
+            </div>
+            <div class="bg-blue-500 rounded-lg shadow-md p-6 text-white">
+                <div class="text-sm opacity-90">Bilancio</div>
+                <div class="text-3xl font-bold" id="balance">€0.00</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Add Transaction Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">➕ Nuova Transazione</h2>
+                <form id="transactionForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Tipo</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="type" value="income" class="mr-2" checked>
+                                <span class="text-green-600">Entrata</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="type" value="expense" class="mr-2">
+                                <span class="text-red-600">Spesa</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Descrizione</label>
+                        <input type="text" id="description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Importo (€)</label>
+                        <input type="number" id="amount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Categoria</label>
+                        <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Data</label>
+                        <input type="date" id="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Aggiungi Transazione
+                    </button>
+                </form>
+            </div>
+
+            <!-- Charts -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Spese per Categoria</h2>
+                <canvas id="expensesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Budget Forecast -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">🔮 Previsione Budget</h2>
+                <button onclick="toggleForecastSettings()" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                    ⚙️ Impostazioni
+                </button>
+            </div>
+
+            <!-- Forecast Settings -->
+            <div id="forecastSettings" class="hidden mb-6 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-gray-700 mb-3">Configurazione Previsione</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Mesi da analizzare (storico)</label>
+                        <input type="number" id="forecastHistoryMonths" value="3" min="1" max="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Mesi da prevedere</label>
+                        <input type="number" id="forecastFutureMonths" value="3" min="1" max="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button onclick="updateForecast()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                    Aggiorna Previsione
+                </button>
+            </div>
+
+            <!-- Forecast Chart -->
+            <div class="mb-6">
+                <canvas id="forecastChart"></canvas>
+            </div>
+
+            <!-- Forecast Details -->
+            <div id="forecastDetails" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">📋 Transazioni Recenti</h2>
+                <select id="filterMonth" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">Tutti i mesi</option>
+                </select>
+            </div>
+            <div id="transactionsList" class="space-y-2">
+                <!-- Transactions will be populated here -->
+            </div>
+        </div>
+
+        <!-- Category Management -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🏷️ Gestione Categorie</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="categoriesList">
+                <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - URL WEBHOOK CONFIGURATO ✅
+        // ============================================
+        const N8N_WEBHOOK_URL = 'https://n8n.srv1194161.hstgr.cloud/webhook/family-budget';
+        const USE_N8N_STORAGE = true; // true = Google Sheets via n8n, false = storage locale
+        
+        // Categories configuration
+        const INCOME_CATEGORIES = [
+            { name: 'Stipendio', icon: '💼' },
+            { name: 'Freelance', icon: '💻' },
+            { name: 'Affitto', icon: '🏠' },
+            { name: 'Investimenti', icon: '📈' },
+            { name: 'Altro', icon: '💰' }
+        ];
+
+        const EXPENSE_CATEGORIES = [
+            { name: 'Casa', icon: '🏠' },
+            { name: 'Alimentari', icon: '🛒' },
+            { name: 'Trasporti', icon: '🚗' },
+            { name: 'Utenze', icon: '💡' },
+            { name: 'Salute', icon: '⚕️' },
+            { name: 'Istruzione', icon: '📚' },
+            { name: 'Intrattenimento', icon: '🎬' },
+            { name: 'Ristorazione', icon: '🍽️' },
+            { name: 'Abbigliamento', icon: '👔' },
+            { name: 'Altro', icon: '📦' }
+        ];
+
+        // State management
+        let transactions = [];
+        let chart = null;
+        let forecastChart = null;
+
+        // Initialize app
+        async function initApp() {
+            updateStorageIndicator();
+            await loadData();
+            setupEventListeners();
+            updateCategorySelect();
+            renderAll();
+            setTodayDate();
+            populateMonthFilter();
+        }
+
+        // Update storage indicator
+        function updateStorageIndicator() {
+            const indicator = document.getElementById('storageIndicator');
+            if (USE_N8N_STORAGE) {
+                indicator.innerHTML = `
+                    <div class="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="font-semibold">Google Sheets</span>
+                    </div>
+                `;
+            } else {
+                indicator.innerHTML = `
+                    <div class="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span class="font-semibold">Storage Locale</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Load data from storage
+        async function loadData() {
+            if (USE_N8N_STORAGE) {
+                // Load from Google Sheets via n8n
+                try {
+                    const response = await fetch(N8N_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ operation: 'load' })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load from n8n');
+                    }
+                    
+                    const data = await response.json();
+                    transactions = data.transactions || [];
+                } catch (error) {
+                    console.error('Error loading from n8n:', error);
+                    alert('Errore nel caricamento dei dati da Google Sheets. Verificare la connessione n8n.');
+                    transactions = [];
+                }
+            } else {
+                // Load from local storage
+                try {
+                    const result = await window.storage.get('family-budget-transactions');
+                    if (result && result.value) {
+                        transactions = JSON.parse(result.value);
+                    }
+                } catch (error) {
+                    console.log('No previous data found, starting fresh');
+                    transactions = [];
+                }
+            }
+        }
+
+        // Save data to storage
+        async function saveData() {
+            if (USE_N8N_STORAGE) {
+                // Save to Google Sheets via n8n is handled per transaction
+                // No need to save all transactions at once
+                return;
+            } else {
+                // Save to local storage
+                try {
+                    await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    alert('Errore nel salvare i dati');
+                }
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('transactionForm').addEventListener('submit', handleAddTransaction);
+            document.querySelectorAll('input[name="type"]').forEach(radio => {
+                radio.addEventListener('change', updateCategorySelect);
+            });
+            document.getElementById('filterMonth').addEventListener('change', renderTransactionsList);
+        }
+
+        // Set today's date as default
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+        // Update category select based on transaction type
+        function updateCategorySelect() {
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+            const select = document.getElementById('category');
+            
+            select.innerHTML = categories.map(cat => 
+                `<option value="${cat.name}">${cat.icon} ${cat.name}</option>`
+            ).join('');
+        }
+
+        // Handle add transaction
+        async function handleAddTransaction(e) {
+            e.preventDefault();
+            
+            const transaction = {
+                id: Date.now(),
+                type: document.querySelector('input[name="type"]:checked').value,
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                date: document.getElementById('date').value
+            };
+
+            if (USE_N8N_STORAGE) {
+                // Save to Google Sheets via n8n
+                try {
+                    const response = await fetch(N8N_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            operation: 'save',
+                            transaction: transaction
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save to n8n');
+                    }
+                    
+                    // Add to local array for immediate display
+                    transactions.unshift(transaction);
+                } catch (error) {
+                    console.error('Error saving to n8n:', error);
+                    alert('Errore nel salvare la transazione su Google Sheets');
+                    return;
+                }
+            } else {
+                // Save to local storage
+                transactions.unshift(transaction);
+                await saveData();
+            }
+            
+            // Reset form
+            document.getElementById('transactionForm').reset();
+            setTodayDate();
+            updateCategorySelect();
+            
+            renderAll();
+        }
+
+        // Delete transaction
+        async function deleteTransaction(id) {
+            if (confirm('Sei sicuro di voler eliminare questa transazione?')) {
+                if (USE_N8N_STORAGE) {
+                    // For Google Sheets, we need to reload all data to find the row
+                    // This is a limitation - in production you'd track row numbers
+                    transactions = transactions.filter(t => t.id !== id);
+                    alert('Nota: per Google Sheets, ricaricare la pagina per sincronizzare le eliminazioni');
+                } else {
+                    transactions = transactions.filter(t => t.id !== id);
+                    await saveData();
+                }
+                renderAll();
+            }
+        }
+
+        // Calculate totals
+        function calculateTotals(transactionsToCalc = transactions) {
+            const income = transactionsToCalc
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const expenses = transactionsToCalc
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            return { income, expenses, balance: income - expenses };
+        }
+
+        // Update summary cards
+        function updateSummary() {
+            const { income, expenses, balance } = calculateTotals();
+            
+            document.getElementById('totalIncome').textContent = `€${income.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `€${expenses.toFixed(2)}`;
+            document.getElementById('balance').textContent = `€${balance.toFixed(2)}`;
+            
+            // Update balance color
+            const balanceEl = document.getElementById('balance').parentElement;
+            balanceEl.className = balanceEl.className.replace(/bg-(green|red|blue)-500/, 
+                balance > 0 ? 'bg-green-500' : balance < 0 ? 'bg-red-500' : 'bg-blue-500');
+        }
+
+        // Populate month filter
+        function populateMonthFilter() {
+            const months = new Set();
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                months.add(monthYear);
+            });
+
+            const select = document.getElementById('filterMonth');
+            const currentOptions = select.innerHTML;
+            
+            Array.from(months).sort().reverse().forEach(monthYear => {
+                const [year, month] = monthYear.split('-');
+                const date = new Date(year, month - 1);
+                const monthName = date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+                
+                if (!select.querySelector(`option[value="${monthYear}"]`)) {
+                    select.innerHTML += `<option value="${monthYear}">${monthName}</option>`;
+                }
+            });
+        }
+
+        // Filter transactions by month
+        function getFilteredTransactions() {
+            const filterValue = document.getElementById('filterMonth').value;
+            if (filterValue === 'all') return transactions;
+            
+            return transactions.filter(t => {
+                const date = new Date(t.date);
+                const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                return monthYear === filterValue;
+            });
+        }
+
+        // Render transactions list
+        function renderTransactionsList() {
+            const filteredTransactions = getFilteredTransactions();
+            const container = document.getElementById('transactionsList');
+            
+            if (filteredTransactions.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Nessuna transazione trovata</p>';
+                return;
+            }
+
+            container.innerHTML = filteredTransactions.map(t => {
+                const categories = t.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+                const category = categories.find(c => c.name === t.category);
+                const icon = category ? category.icon : '📦';
+                
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="flex items-center gap-4 flex-1">
+                            <span class="text-2xl">${icon}</span>
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">${t.description}</div>
+                                <div class="text-sm text-gray-500">${t.category} • ${new Date(t.date).toLocaleDateString('it-IT')}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                                ${t.type === 'income' ? '+' : '-'}€${t.amount.toFixed(2)}
+                            </span>
+                            <button onclick="deleteTransaction(${t.id})" class="text-red-500 hover:text-red-700">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render expenses chart
+        function renderChart() {
+            const filteredTransactions = getFilteredTransactions();
+            const expensesByCategory = {};
+            
+            filteredTransactions
+                .filter(t => t.type === 'expense')
+                .forEach(t => {
+                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+                });
+
+            const categories = Object.keys(expensesByCategory);
+            const amounts = Object.values(expensesByCategory);
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('expensesChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: amounts,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+                            '#4BC0C0', '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: €${context.parsed.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render categories list
+        function renderCategories() {
+            const container = document.getElementById('categoriesList');
+            const expensesByCategory = {};
+            
+            transactions
+                .filter(t => t.type === 'expense')
+                .forEach(t => {
+                    expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+                });
+
+            container.innerHTML = EXPENSE_CATEGORIES.map(cat => {
+                const amount = expensesByCategory[cat.name] || 0;
+                return `
+                    <div class="category-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-3xl mb-2">${cat.icon}</div>
+                        <div class="font-semibold text-gray-800 text-sm">${cat.name}</div>
+                        <div class="text-blue-600 font-bold">€${amount.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle forecast settings
+        function toggleForecastSettings() {
+            const settings = document.getElementById('forecastSettings');
+            settings.classList.toggle('hidden');
+        }
+
+        // Get monthly data
+        function getMonthlyData() {
+            const monthlyData = {};
+            
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = { income: 0, expenses: 0 };
+                }
+                
+                if (t.type === 'income') {
+                    monthlyData[monthKey].income += t.amount;
+                } else {
+                    monthlyData[monthKey].expenses += t.amount;
+                }
+            });
+            
+            return monthlyData;
+        }
+
+        // Calculate average from historical data
+        function calculateAverages(monthlyData, historyMonths) {
+            const sortedMonths = Object.keys(monthlyData).sort().reverse();
+            const recentMonths = sortedMonths.slice(0, historyMonths);
+            
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            let count = 0;
+            
+            recentMonths.forEach(month => {
+                totalIncome += monthlyData[month].income;
+                totalExpenses += monthlyData[month].expenses;
+                count++;
+            });
+            
+            return {
+                avgIncome: count > 0 ? totalIncome / count : 0,
+                avgExpenses: count > 0 ? totalExpenses / count : 0,
+                monthsCounted: count
+            };
+        }
+
+        // Generate forecast data
+        function generateForecast() {
+            const historyMonths = parseInt(document.getElementById('forecastHistoryMonths').value) || 3;
+            const futureMonths = parseInt(document.getElementById('forecastFutureMonths').value) || 3;
+            
+            const monthlyData = getMonthlyData();
+            const { avgIncome, avgExpenses, monthsCounted } = calculateAverages(monthlyData, historyMonths);
+            
+            // Get last 6 months of actual data
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const last6Months = sortedMonths.slice(-6);
+            
+            // Generate future months
+            const today = new Date();
+            const futureMonthsData = [];
+            
+            for (let i = 1; i <= futureMonths; i++) {
+                const futureDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+                const monthKey = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
+                futureMonthsData.push(monthKey);
+            }
+            
+            return {
+                historicalMonths: last6Months,
+                monthlyData,
+                futureMonths: futureMonthsData,
+                avgIncome,
+                avgExpenses,
+                avgBalance: avgIncome - avgExpenses,
+                monthsCounted
+            };
+        }
+
+        // Format month for display
+        function formatMonth(monthKey) {
+            const [year, month] = monthKey.split('-');
+            const date = new Date(year, month - 1);
+            return date.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
+        }
+
+        // Update forecast visualization
+        function updateForecast() {
+            const forecast = generateForecast();
+            
+            // Prepare chart data
+            const labels = [...forecast.historicalMonths.map(formatMonth), ...forecast.futureMonths.map(formatMonth)];
+            const incomeData = [];
+            const expensesData = [];
+            const balanceData = [];
+            
+            // Historical data
+            forecast.historicalMonths.forEach(month => {
+                const data = forecast.monthlyData[month] || { income: 0, expenses: 0 };
+                incomeData.push(data.income);
+                expensesData.push(data.expenses);
+                balanceData.push(data.income - data.expenses);
+            });
+            
+            // Forecast data
+            forecast.futureMonths.forEach(() => {
+                incomeData.push(forecast.avgIncome);
+                expensesData.push(forecast.avgExpenses);
+                balanceData.push(forecast.avgBalance);
+            });
+            
+            // Render chart
+            if (forecastChart) {
+                forecastChart.destroy();
+            }
+            
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Entrate',
+                            data: incomeData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Spese',
+                            data: expensesData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Bilancio',
+                            data: balanceData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderDash: balanceData.map((_, i) => 
+                                i >= forecast.historicalMonths.length ? [5, 5] : []
+                            )
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const isPrediction = context.dataIndex >= forecast.historicalMonths.length;
+                                    const prefix = isPrediction ? '(Prev.) ' : '';
+                                    return prefix + context.dataset.label + ': €' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value.toFixed(0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Render forecast details
+            renderForecastDetails(forecast);
+        }
+
+        // Render forecast details cards
+        function renderForecastDetails(forecast) {
+            const container = document.getElementById('forecastDetails');
+            
+            const savings = forecast.avgBalance * forecast.futureMonths.length;
+            const savingsClass = savings > 0 ? 'text-green-600' : 'text-red-600';
+            
+            container.innerHTML = `
+                <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <div class="text-sm text-gray-600 mb-1">📈 Entrate Medie Mensili</div>
+                    <div class="text-2xl font-bold text-green-700">€${forecast.avgIncome.toFixed(2)}</div>
+                    <div class="text-xs text-gray-500 mt-1">Basato su ${forecast.monthsCounted} mesi</div>
+                </div>
+                
+                <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
+                    <div class="text-sm text-gray-600 mb-1">📉 Spese Medie Mensili</div>
+                    <div class="text-2xl font-bold text-red-700">€${forecast.avgExpenses.toFixed(2)}</div>
+                    <div class="text-xs text-gray-500 mt-1">Basato su ${forecast.monthsCounted} mesi</div>
+                </div>
+                
+                <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                    <div class="text-sm text-gray-600 mb-1">💰 Risparmio Previsto</div>
+                    <div class="text-2xl font-bold ${savingsClass}">€${savings.toFixed(2)}</div>
+                    <div class="text-xs text-gray-500 mt-1">Prossimi ${forecast.futureMonths.length} mesi</div>
+                </div>
+            `;
+        }
+
+        // Render all components
+        function renderAll() {
+            updateSummary();
+            renderTransactionsList();
+            renderChart();
+            renderCategories();
+            populateMonthFilter();
+            updateForecast();
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
