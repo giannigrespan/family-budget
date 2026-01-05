@@ -88,7 +88,8 @@ async function loadData() {
             if (!response.ok) throw new Error('Failed to load from n8n');
             
             const data = await response.json();
-            transactions = data.transactions || [];
+            // Filter out soft-deleted transactions
+            transactions = (data.transactions || []).filter(t => !t.deleted);
         } catch (error) {
             console.error('Error loading transactions:', error);
             showNotification('Errore nel caricamento delle transazioni', 'error');
@@ -300,13 +301,11 @@ async function handleAddTransaction(e) {
 }
 
 async function deleteTransaction(id) {
-    if (confirm('Sei sicuro di voler eliminare questa transazione?')) {
+    if (confirm('Sei sicuro di voler nascondere questa transazione? (Puoi eliminarla manualmente da Google Sheets)')) {
+        // Just hide locally, don't call n8n
         transactions = transactions.filter(t => t.id !== id);
-        if (!USE_N8N_STORAGE) {
-            await saveData();
-        }
         renderAll();
-        showNotification('Transazione eliminata', 'info');
+        showNotification('⚠️ Transazione nascosta dall\'app. Per eliminarla definitivamente, cancellala manualmente da Google Sheets.', 'warning');
     }
 }
 
