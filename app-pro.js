@@ -96,9 +96,9 @@ async function loadData() {
         }
     } else {
         try {
-            const result = await window.storage.get('family-budget-transactions');
-            if (result && result.value) {
-                transactions = JSON.parse(result.value);
+            const data = localStorage.getItem('family-budget-transactions');
+            if (data) {
+                transactions = JSON.parse(data);
             }
         } catch (error) {
             console.log('No previous transactions found');
@@ -109,9 +109,9 @@ async function loadData() {
 
 async function loadBudgets() {
     try {
-        const result = await window.storage.get('family-budget-budgets');
-        if (result && result.value) {
-            budgets = JSON.parse(result.value);
+        const data = localStorage.getItem('family-budget-budgets');
+        if (data) {
+            budgets = JSON.parse(data);
         }
     } catch (error) {
         console.log('No budgets found');
@@ -121,9 +121,9 @@ async function loadBudgets() {
 
 async function loadGoals() {
     try {
-        const result = await window.storage.get('family-budget-goals');
-        if (result && result.value) {
-            goals = JSON.parse(result.value);
+        const data = localStorage.getItem('family-budget-goals');
+        if (data) {
+            goals = JSON.parse(data);
         }
     } catch (error) {
         console.log('No goals found');
@@ -133,9 +133,9 @@ async function loadGoals() {
 
 async function loadRecurringTransactions() {
     try {
-        const result = await window.storage.get('family-budget-recurring');
-        if (result && result.value) {
-            recurringTransactions = JSON.parse(result.value);
+        const data = localStorage.getItem('family-budget-recurring');
+        if (data) {
+            recurringTransactions = JSON.parse(data);
         }
     } catch (error) {
         console.log('No recurring transactions found');
@@ -148,7 +148,7 @@ async function saveData() {
         return; // Handled per transaction
     } else {
         try {
-            await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
+            localStorage.setItem('family-budget-transactions', JSON.stringify(transactions));
         } catch (error) {
             console.error('Error saving data:', error);
             showNotification('Errore nel salvare i dati', 'error');
@@ -158,7 +158,7 @@ async function saveData() {
 
 async function saveBudgets() {
     try {
-        await window.storage.set('family-budget-budgets', JSON.stringify(budgets));
+        localStorage.setItem('family-budget-budgets', JSON.stringify(budgets));
     } catch (error) {
         console.error('Error saving budgets:', error);
         showNotification('Errore nel salvare i budget', 'error');
@@ -167,7 +167,7 @@ async function saveBudgets() {
 
 async function saveGoals() {
     try {
-        await window.storage.set('family-budget-goals', JSON.stringify(goals));
+        localStorage.setItem('family-budget-goals', JSON.stringify(goals));
     } catch (error) {
         console.error('Error saving goals:', error);
         showNotification('Errore nel salvare gli obiettivi', 'error');
@@ -176,7 +176,7 @@ async function saveGoals() {
 
 async function saveRecurringTransactions() {
     try {
-        await window.storage.set('family-budget-recurring', JSON.stringify(recurringTransactions));
+        localStorage.setItem('family-budget-recurring', JSON.stringify(recurringTransactions));
     } catch (error) {
         console.error('Error saving recurring:', error);
         showNotification('Errore nel salvare le ricorrenze', 'error');
