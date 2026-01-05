@@ -140,22 +140,41 @@
 
     <!-- Main App -->
     <div id="app" class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header with Theme Toggle -->
+        <!-- Header with Theme Toggle and User Management -->
         <div class="card rounded-lg shadow-md p-6 mb-6">
             <div class="flex justify-between items-start flex-wrap gap-4">
                 <div>
                     <h1 class="text-3xl font-bold mb-2">💰 Budget Familiare Pro</h1>
                     <p style="color: var(--text-secondary)">Gestione completa con budget, obiettivi e ricorrenze</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <div id="currentUserIndicator" class="px-3 py-2 bg-blue-50 dark:bg-blue-900 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 transition" onclick="openUserManagement()" title="Gestisci utenti">
+                        <div class="flex items-center gap-2">
+                            <span style="font-size: 1.5rem">👤</span>
+                            <span class="font-semibold">Caricamento...</span>
+                        </div>
+                    </div>
                     <div id="storageIndicator" class="text-sm"></div>
-                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 transition" title="Cambia tema">
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Cambia tema">
                         <span id="themeIcon" class="text-xl">🌙</span>
                     </button>
                     <button onclick="installPWA()" id="installBtn" class="hidden p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition" title="Installa App">
                         📱 Installa
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- User Selector (Quick Switch) -->
+        <div class="card rounded-lg shadow-md p-4 mb-6">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold" style="color: var(--text-secondary)">👥 Utente attivo:</span>
+                    <div id="userSelector" class="flex gap-2"></div>
+                </div>
+                <button onclick="openUserManagement()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition text-sm font-semibold">
+                    ⚙️ Gestisci Utenti
+                </button>
             </div>
         </div>
 
@@ -439,6 +458,65 @@
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">Salva</button>
                     <button type="button" onclick="closeGoalModal()" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400 transition">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="userManagementModal" class="modal">
+        <div class="card p-6 rounded-lg max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">👥 Gestione Utenti</h3>
+                <button onclick="closeUserManagement()" class="text-2xl hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg px-2 transition">×</button>
+            </div>
+
+            <p class="mb-4" style="color: var(--text-secondary)">
+                Gestisci gli utenti del budget familiare. Ogni utente ha transazioni, budget e obiettivi separati.
+            </p>
+
+            <div id="userManagementList" class="mb-6">
+                <!-- User list will be rendered here -->
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="openAddUser()" class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition font-semibold">
+                    ➕ Aggiungi Utente
+                </button>
+                <button onclick="closeUserManagement()" class="flex-1 bg-gray-300 dark:bg-gray-700 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition font-semibold">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="card p-6 rounded-lg max-w-md w-full m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">➕ Nuovo Utente</h3>
+                <button onclick="closeAddUser()" class="text-2xl hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg px-2 transition">×</button>
+            </div>
+
+            <form id="addUserForm" onsubmit="handleAddUser(event)">
+                <div class="mb-4">
+                    <label class="block font-bold mb-2">Nome Utente</label>
+                    <input type="text" id="newUserName" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required placeholder="Es: Mario">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block font-bold mb-2">Icona (Emoji)</label>
+                    <input type="text" id="newUserIcon" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" maxlength="2" placeholder="👤">
+                    <p class="text-sm mt-1" style="color: var(--text-secondary)">Suggerimenti: 👤 👥 👨 👩 🧑 👶 👴 👵</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition font-semibold">
+                        Crea
+                    </button>
+                    <button type="button" onclick="closeAddUser()" class="flex-1 bg-gray-300 dark:bg-gray-700 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition font-semibold">
+                        Annulla
+                    </button>
                 </div>
             </form>
         </div>
