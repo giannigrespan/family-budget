@@ -187,7 +187,6 @@
             { name: 'Intrattenimento', icon: '🎬' },
             { name: 'Ristorazione', icon: '🍽️' },
             { name: 'Abbigliamento', icon: '👔' },
-            { name: 'Business', icon: '💼' },
             { name: 'Altro', icon: '📦' }
         ];
 
@@ -198,34 +197,13 @@
 
         // Initialize app
         async function initApp() {
-            try {
-                console.log('🚀 Inizializzazione app...');
-                updateStorageIndicator();
-                console.log('✅ Storage indicator aggiornato');
-
-                await loadData();
-                console.log('✅ Dati caricati');
-
-                setupEventListeners();
-                console.log('✅ Event listeners configurati');
-
-                updateCategorySelect();
-                console.log('✅ Categorie aggiornate');
-
-                renderAll();
-                console.log('✅ Rendering completato');
-
-                setTodayDate();
-                console.log('✅ Data impostata');
-
-                populateMonthFilter();
-                console.log('✅ Filtro mesi popolato');
-
-                console.log('🎉 App inizializzata con successo!');
-            } catch (error) {
-                console.error('❌ Errore durante l\'inizializzazione:', error);
-                alert('Errore durante l\'inizializzazione dell\'app. Controlla la console per dettagli.');
-            }
+            updateStorageIndicator();
+            await loadData();
+            setupEventListeners();
+            updateCategorySelect();
+            renderAll();
+            setTodayDate();
+            populateMonthFilter();
         }
 
         // Update storage indicator
@@ -258,30 +236,24 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ operation: 'load' })
                     });
-
+                    
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        throw new Error('Failed to load from n8n');
                     }
-
+                    
                     const data = await response.json();
-                    if (data.success && Array.isArray(data.transactions)) {
-                        transactions = data.transactions;
-                        console.log(`Caricati ${transactions.length} transazioni da Google Sheets`);
-                    } else {
-                        console.warn('Formato dati non valido da n8n:', data);
-                        transactions = [];
-                    }
+                    transactions = data.transactions || [];
                 } catch (error) {
                     console.error('Error loading from n8n:', error);
-                    console.warn('Continuo con array vuoto. L\'app funzionerà comunque.');
+                    alert('Errore nel caricamento dei dati da Google Sheets. Verificare la connessione n8n.');
                     transactions = [];
                 }
             } else {
                 // Load from local storage
                 try {
-                    const data = localStorage.getItem('family-budget-transactions');
-                    if (data) {
-                        transactions = JSON.parse(data);
+                    const result = await window.storage.get('family-budget-transactions');
+                    if (result && result.value) {
+                        transactions = JSON.parse(result.value);
                     }
                 } catch (error) {
                     console.log('No previous data found, starting fresh');
@@ -299,7 +271,7 @@
             } else {
                 // Save to local storage
                 try {
-                    localStorage.setItem('family-budget-transactions', JSON.stringify(transactions));
+                    await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
                 } catch (error) {
                     console.error('Error saving data:', error);
                     alert('Errore nel salvare i dati');
@@ -578,9 +550,6 @@
             settings.classList.toggle('hidden');
         }
 
-        // Expose functions to window for onclick handlers
-        window.toggleForecastSettings = toggleForecastSettings;
-
         // Get monthly data
         function getMonthlyData() {
             const monthlyData = {};
@@ -801,17 +770,6 @@
             populateMonthFilter();
             updateForecast();
         }
-
-        // Expose functions to window for onclick handlers
-        window.updateForecast = updateForecast;
-        window.deleteTransaction = deleteTransaction;
-
-        // Verify functions are exposed
-        console.log('🔧 Funzioni globali esposte:', {
-            toggleForecastSettings: typeof window.toggleForecastSettings,
-            updateForecast: typeof window.updateForecast,
-            deleteTransaction: typeof window.deleteTransaction
-        });
 
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
