@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "name": "family-budget-pro-ai",
+  "buildCommand": null,
+  "outputDirectory": ".",
   "routes": [
     {
       "src": "/",
