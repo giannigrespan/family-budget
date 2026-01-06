@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Applicazione per la gestione del budget familiare con sincronizzazione Google Sheets">
+    <meta name="description"
+        content="Applicazione per la gestione del budget familiare con sincronizzazione Google Sheets">
     <title>Budget Familiare</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,12 +14,14 @@
         .category-card {
             transition: all 0.3s ease;
         }
+
         .category-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
+
 <body class="bg-gray-50">
     <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Header -->
@@ -53,7 +57,8 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold text-gray-800">➕ Nuova Transazione</h2>
-                    <button type="button" onclick="openReceiptScanner()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition flex items-center gap-2">
+                    <button type="button" onclick="openReceiptScanner()"
+                        class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition flex items-center gap-2">
                         📷 Scansiona Scontrino
                     </button>
                 </div>
@@ -74,27 +79,36 @@
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Descrizione</label>
-                        <input type="text" id="description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="text" id="description"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Importo (€)</label>
-                        <input type="number" id="amount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="number" id="amount" step="0.01"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Categoria</label>
-                        <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <select id="category"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
                             <!-- Options will be populated by JavaScript -->
                         </select>
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Data</label>
-                        <input type="date" id="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="date" id="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
                     </div>
 
-                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <button type="submit"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
                         Aggiungi Transazione
                     </button>
                 </form>
@@ -111,7 +125,8 @@
         <div class="bg-white rounded-lg shadow-md p-6 mt-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-800">🔮 Previsione Budget</h2>
-                <button onclick="toggleForecastSettings()" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                <button onclick="toggleForecastSettings()"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
                     ⚙️ Impostazioni
                 </button>
             </div>
@@ -122,14 +137,17 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Mesi da analizzare (storico)</label>
-                        <input type="number" id="forecastHistoryMonths" value="3" min="1" max="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="forecastHistoryMonths" value="3" min="1" max="12"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Mesi da prevedere</label>
-                        <input type="number" id="forecastFutureMonths" value="3" min="1" max="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="forecastFutureMonths" value="3" min="1" max="6"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
-                <button onclick="updateForecast()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                <button onclick="updateForecast()"
+                    class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
                     Aggiorna Previsione
                 </button>
             </div>
@@ -149,7 +167,8 @@
         <div class="bg-white rounded-lg shadow-md p-6 mt-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-800">📋 Transazioni Recenti</h2>
-                <select id="filterMonth" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="filterMonth"
+                    class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="all">Tutti i mesi</option>
                 </select>
             </div>
@@ -168,43 +187,50 @@
     </div>
 
     <!-- Receipt Scanner Modal -->
-    <div id="receiptScannerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div id="receiptScannerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+        style="display: none;">
         <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-gray-800">📷 Scansiona Scontrino</h3>
-                <button onclick="closeReceiptScanner()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                <button onclick="closeReceiptScanner()"
+                    class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
-            
+
             <!-- Upload Options -->
             <div id="receiptUploadSection" class="space-y-4">
-                <p class="text-gray-600 text-sm">Carica una foto dello scontrino per estrarre automaticamente i dati.</p>
-                
+                <p class="text-gray-600 text-sm">Carica una foto dello scontrino per estrarre automaticamente i dati.
+                </p>
+
                 <div class="flex flex-col sm:flex-row gap-3">
                     <label class="flex-1 cursor-pointer">
-                        <div class="bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 rounded-lg p-6 text-center transition">
+                        <div
+                            class="bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 rounded-lg p-6 text-center transition">
                             <div class="text-4xl mb-2">📁</div>
                             <div class="text-blue-600 font-semibold">Carica Immagine</div>
                             <div class="text-gray-500 text-sm">JPG, PNG, HEIC</div>
                         </div>
-                        <input type="file" id="receiptFileInput" accept="image/*" class="hidden" onchange="handleReceiptImage(event)">
+                        <input type="file" id="receiptFileInput" accept="image/*" class="hidden"
+                            onchange="handleReceiptImage(event)">
                     </label>
-                    
+
                     <label class="flex-1 cursor-pointer">
-                        <div class="bg-green-50 hover:bg-green-100 border-2 border-dashed border-green-300 rounded-lg p-6 text-center transition">
+                        <div
+                            class="bg-green-50 hover:bg-green-100 border-2 border-dashed border-green-300 rounded-lg p-6 text-center transition">
                             <div class="text-4xl mb-2">📸</div>
                             <div class="text-green-600 font-semibold">Scatta Foto</div>
                             <div class="text-gray-500 text-sm">Usa la fotocamera</div>
                         </div>
-                        <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleReceiptImage(event)">
+                        <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" class="hidden"
+                            onchange="handleReceiptImage(event)">
                     </label>
                 </div>
             </div>
-            
+
             <!-- Image Preview -->
             <div id="receiptPreviewSection" class="hidden mt-4">
                 <img id="receiptPreview" class="w-full rounded-lg border border-gray-200" alt="Anteprima scontrino">
             </div>
-            
+
             <!-- Processing Progress -->
             <div id="receiptProcessingSection" class="hidden mt-4">
                 <div class="bg-blue-50 rounded-lg p-4">
@@ -213,12 +239,13 @@
                         <span class="text-blue-800 font-semibold">Elaborazione in corso...</span>
                     </div>
                     <div class="w-full bg-blue-200 rounded-full h-2">
-                        <div id="receiptProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        <div id="receiptProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style="width: 0%"></div>
                     </div>
                     <p id="receiptProgressText" class="text-blue-600 text-sm mt-2">Inizializzazione OCR...</p>
                 </div>
             </div>
-            
+
             <!-- Results Section -->
             <div id="receiptResultsSection" class="hidden mt-4">
                 <div class="bg-green-50 rounded-lg p-4 border border-green-200">
@@ -226,35 +253,41 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-1">Importo</label>
-                            <input type="text" id="extractedAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
+                            <input type="text" id="extractedAmount"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-1">Data</label>
-                            <input type="date" id="extractedDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <input type="date" id="extractedDate"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-1">Descrizione</label>
-                            <input type="text" id="extractedDescription" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
+                            <input type="text" id="extractedDescription"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="flex gap-3 mt-4">
-                    <button onclick="applyReceiptData()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <button onclick="applyReceiptData()"
+                        class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">
                         ✓ Applica al Form
                     </button>
-                    <button onclick="resetReceiptScanner()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded-lg transition">
+                    <button onclick="resetReceiptScanner()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded-lg transition">
                         ↺ Nuova Scansione
                     </button>
                 </div>
             </div>
-            
+
             <!-- Error Section -->
             <div id="receiptErrorSection" class="hidden mt-4">
                 <div class="bg-red-50 rounded-lg p-4 border border-red-200">
                     <h4 class="font-bold text-red-800 mb-2">❌ Errore</h4>
                     <p id="receiptErrorText" class="text-red-600"></p>
-                    <button onclick="resetReceiptScanner()" class="mt-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <button onclick="resetReceiptScanner()"
+                        class="mt-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">
                         Riprova
                     </button>
                 </div>
@@ -268,9 +301,9 @@
         // ============================================
         const N8N_WEBHOOK_URL = 'https://n8n.srv1194161.hstgr.cloud/webhook/family-budget';
         const USE_N8N_STORAGE = true; // true = Google Sheets via n8n, false = storage locale
-        
-        // Categories configuration
-        const INCOME_CATEGORIES = [
+
+        // Default Categories
+        const DEFAULT_INCOME_CATEGORIES = [
             { name: 'Stipendio', icon: '💼' },
             { name: 'Freelance', icon: '💻' },
             { name: 'Affitto', icon: '🏠' },
@@ -278,7 +311,7 @@
             { name: 'Altro', icon: '💰' }
         ];
 
-        const EXPENSE_CATEGORIES = [
+        const DEFAULT_EXPENSE_CATEGORIES = [
             { name: 'Casa', icon: '🏠' },
             { name: 'Alimentari', icon: '🛒' },
             { name: 'Trasporti', icon: '🚗' },
@@ -293,6 +326,8 @@
 
         // State management
         let transactions = [];
+        let incomeCategories = [...DEFAULT_INCOME_CATEGORIES];
+        let expenseCategories = [...DEFAULT_EXPENSE_CATEGORIES];
         let chart = null;
         let forecastChart = null;
 
@@ -337,13 +372,20 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ operation: 'load' })
                     });
-                    
+
                     if (!response.ok) {
                         throw new Error('Failed to load from n8n');
                     }
-                    
+
                     const data = await response.json();
                     transactions = data.transactions || [];
+
+                    // Note: In a real app categories would also be in Google Sheets
+                    // For now we persist them locally even when using n8n for transactions
+                    const storedIncome = await window.storage.get('family-budget-income-categories');
+                    const storedExpense = await window.storage.get('family-budget-expense-categories');
+                    if (storedIncome && storedIncome.value) incomeCategories = JSON.parse(storedIncome.value);
+                    if (storedExpense && storedExpense.value) expenseCategories = JSON.parse(storedExpense.value);
                 } catch (error) {
                     console.error('Error loading from n8n:', error);
                     alert('Errore nel caricamento dei dati da Google Sheets. Verificare la connessione n8n.');
@@ -356,10 +398,25 @@
                     if (result && result.value) {
                         transactions = JSON.parse(result.value);
                     }
+
+                    const storedIncome = await window.storage.get('family-budget-income-categories');
+                    const storedExpense = await window.storage.get('family-budget-expense-categories');
+                    if (storedIncome && storedIncome.value) incomeCategories = JSON.parse(storedIncome.value);
+                    if (storedExpense && storedExpense.value) expenseCategories = JSON.parse(storedExpense.value);
                 } catch (error) {
                     console.log('No previous data found, starting fresh');
                     transactions = [];
                 }
+            }
+        }
+
+        // Save categories to storage
+        async function saveCategories() {
+            try {
+                await window.storage.set('family-budget-income-categories', JSON.stringify(incomeCategories));
+                await window.storage.set('family-budget-expense-categories', JSON.stringify(expenseCategories));
+            } catch (error) {
+                console.error('Error saving categories:', error);
             }
         }
 
@@ -397,11 +454,11 @@
 
         // Update category select based on transaction type
         function updateCategorySelect() {
-            const type = document.querySelector('input[name="type"]:checked').value;
-            const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+            const typeValue = document.querySelector('input[name="type"]:checked').value;
+            const categories = typeValue === 'income' ? incomeCategories : expenseCategories;
             const select = document.getElementById('category');
-            
-            select.innerHTML = categories.map(cat => 
+
+            select.innerHTML = categories.map(cat =>
                 `<option value="${cat.name}">${cat.icon} ${cat.name}</option>`
             ).join('');
         }
@@ -409,7 +466,7 @@
         // Handle add transaction
         async function handleAddTransaction(e) {
             e.preventDefault();
-            
+
             const transaction = {
                 id: Date.now(),
                 type: document.querySelector('input[name="type"]:checked').value,
@@ -430,11 +487,11 @@
                             transaction: transaction
                         })
                     });
-                    
+
                     if (!response.ok) {
                         throw new Error('Failed to save to n8n');
                     }
-                    
+
                     // Add to local array for immediate display
                     transactions.unshift(transaction);
                 } catch (error) {
@@ -447,12 +504,12 @@
                 transactions.unshift(transaction);
                 await saveData();
             }
-            
+
             // Reset form
             document.getElementById('transactionForm').reset();
             setTodayDate();
             updateCategorySelect();
-            
+
             renderAll();
         }
 
@@ -477,25 +534,25 @@
             const income = transactionsToCalc
                 .filter(t => t.type === 'income')
                 .reduce((sum, t) => sum + t.amount, 0);
-            
+
             const expenses = transactionsToCalc
                 .filter(t => t.type === 'expense')
                 .reduce((sum, t) => sum + t.amount, 0);
-            
+
             return { income, expenses, balance: income - expenses };
         }
 
         // Update summary cards
         function updateSummary() {
             const { income, expenses, balance } = calculateTotals();
-            
+
             document.getElementById('totalIncome').textContent = `€${income.toFixed(2)}`;
             document.getElementById('totalExpenses').textContent = `€${expenses.toFixed(2)}`;
             document.getElementById('balance').textContent = `€${balance.toFixed(2)}`;
-            
+
             // Update balance color
             const balanceEl = document.getElementById('balance').parentElement;
-            balanceEl.className = balanceEl.className.replace(/bg-(green|red|blue)-500/, 
+            balanceEl.className = balanceEl.className.replace(/bg-(green|red|blue)-500/,
                 balance > 0 ? 'bg-green-500' : balance < 0 ? 'bg-red-500' : 'bg-blue-500');
         }
 
@@ -510,12 +567,12 @@
 
             const select = document.getElementById('filterMonth');
             const currentOptions = select.innerHTML;
-            
+
             Array.from(months).sort().reverse().forEach(monthYear => {
                 const [year, month] = monthYear.split('-');
                 const date = new Date(year, month - 1);
                 const monthName = date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-                
+
                 if (!select.querySelector(`option[value="${monthYear}"]`)) {
                     select.innerHTML += `<option value="${monthYear}">${monthName}</option>`;
                 }
@@ -526,7 +583,7 @@
         function getFilteredTransactions() {
             const filterValue = document.getElementById('filterMonth').value;
             if (filterValue === 'all') return transactions;
-            
+
             return transactions.filter(t => {
                 const date = new Date(t.date);
                 const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -538,17 +595,17 @@
         function renderTransactionsList() {
             const filteredTransactions = getFilteredTransactions();
             const container = document.getElementById('transactionsList');
-            
+
             if (filteredTransactions.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-center py-8">Nessuna transazione trovata</p>';
                 return;
             }
 
             container.innerHTML = filteredTransactions.map(t => {
-                const categories = t.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+                const categories = t.type === 'income' ? incomeCategories : expenseCategories;
                 const category = categories.find(c => c.name === t.category);
                 const icon = category ? category.icon : '📦';
-                
+
                 return `
                     <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                         <div class="flex items-center gap-4 flex-1">
@@ -575,7 +632,7 @@
         function renderChart() {
             const filteredTransactions = getFilteredTransactions();
             const expensesByCategory = {};
-            
+
             filteredTransactions
                 .filter(t => t.type === 'expense')
                 .forEach(t => {
@@ -612,7 +669,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return `${context.label}: €${context.parsed.toFixed(2)}`;
                                 }
                             }
@@ -626,24 +683,90 @@
         function renderCategories() {
             const container = document.getElementById('categoriesList');
             const expensesByCategory = {};
-            
+
             transactions
                 .filter(t => t.type === 'expense')
                 .forEach(t => {
                     expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
                 });
 
-            container.innerHTML = EXPENSE_CATEGORIES.map(cat => {
+            let html = expenseCategories.map(cat => {
                 const amount = expensesByCategory[cat.name] || 0;
                 return `
-                    <div class="category-card p-4 bg-gray-50 rounded-lg text-center">
+                    <div class="category-card p-4 bg-gray-50 rounded-lg text-center relative group">
                         <div class="text-3xl mb-2">${cat.icon}</div>
                         <div class="font-semibold text-gray-800 text-sm">${cat.name}</div>
                         <div class="text-blue-600 font-bold">€${amount.toFixed(2)}</div>
+                        <button onclick="deleteCategory('expense', '${cat.name}')" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition text-xs bg-red-100 text-red-600 p-1 rounded hover:bg-red-200">
+                            🗑️
+                        </button>
                     </div>
                 `;
             }).join('');
+
+            // Add Category Form
+            html += `
+                <div class="p-4 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2">
+                    <input type="text" id="newCatIcon" placeholder="🎨" class="w-10 text-center border rounded">
+                    <input type="text" id="newCatName" placeholder="Nome" class="w-full text-xs border rounded p-1">
+                    <button onclick="addCategory('expense')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 w-full font-bold">
+                        ➕ Aggiungi
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html;
         }
+
+        // Logic to add a category
+        async function addCategory(type) {
+            const nameInput = document.getElementById('newCatName');
+            const iconInput = document.getElementById('newCatIcon');
+            const name = nameInput.value.trim();
+            const icon = iconInput.value.trim() || '📦';
+
+            if (!name) return alert('Inserisci un nome per la categoria');
+
+            const categories = type === 'expense' ? expenseCategories : incomeCategories;
+            if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                return alert('Questa categoria esiste già');
+            }
+
+            categories.push({ name, icon });
+            await saveCategories();
+            nameInput.value = '';
+            iconInput.value = '';
+
+            renderAll();
+            updateCategorySelect();
+        }
+
+        // Logic to delete a category
+        async function deleteCategory(type, name) {
+            if (name === 'Altro') return alert('Non puoi eliminare la categoria "Altro"');
+
+            if (confirm(`Sei sicuro di voler eliminare la categoria "${name}"? Le transazioni associate verranno spostate in "Altro".`)) {
+                // Reassign transactions
+                transactions.forEach(t => {
+                    if (t.category === name) t.category = 'Altro';
+                });
+
+                if (type === 'expense') {
+                    expenseCategories = expenseCategories.filter(c => c.name !== name);
+                } else {
+                    incomeCategories = incomeCategories.filter(c => c.name !== name);
+                }
+
+                await saveCategories();
+                if (!USE_N8N_STORAGE) await saveData(); // Save transaction reassignments locally
+
+                renderAll();
+                updateCategorySelect();
+            }
+        }
+
+        window.addCategory = addCategory;
+        window.deleteCategory = deleteCategory;
 
         // Toggle forecast settings
         function toggleForecastSettings() {
@@ -657,22 +780,22 @@
         // Get monthly data
         function getMonthlyData() {
             const monthlyData = {};
-            
+
             transactions.forEach(t => {
                 const date = new Date(t.date);
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                
+
                 if (!monthlyData[monthKey]) {
                     monthlyData[monthKey] = { income: 0, expenses: 0 };
                 }
-                
+
                 if (t.type === 'income') {
                     monthlyData[monthKey].income += t.amount;
                 } else {
                     monthlyData[monthKey].expenses += t.amount;
                 }
             });
-            
+
             return monthlyData;
         }
 
@@ -680,17 +803,17 @@
         function calculateAverages(monthlyData, historyMonths) {
             const sortedMonths = Object.keys(monthlyData).sort().reverse();
             const recentMonths = sortedMonths.slice(0, historyMonths);
-            
+
             let totalIncome = 0;
             let totalExpenses = 0;
             let count = 0;
-            
+
             recentMonths.forEach(month => {
                 totalIncome += monthlyData[month].income;
                 totalExpenses += monthlyData[month].expenses;
                 count++;
             });
-            
+
             return {
                 avgIncome: count > 0 ? totalIncome / count : 0,
                 avgExpenses: count > 0 ? totalExpenses / count : 0,
@@ -702,24 +825,24 @@
         function generateForecast() {
             const historyMonths = parseInt(document.getElementById('forecastHistoryMonths').value) || 3;
             const futureMonths = parseInt(document.getElementById('forecastFutureMonths').value) || 3;
-            
+
             const monthlyData = getMonthlyData();
             const { avgIncome, avgExpenses, monthsCounted } = calculateAverages(monthlyData, historyMonths);
-            
+
             // Get last 6 months of actual data
             const sortedMonths = Object.keys(monthlyData).sort();
             const last6Months = sortedMonths.slice(-6);
-            
+
             // Generate future months
             const today = new Date();
             const futureMonthsData = [];
-            
+
             for (let i = 1; i <= futureMonths; i++) {
                 const futureDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
                 const monthKey = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
                 futureMonthsData.push(monthKey);
             }
-            
+
             return {
                 historicalMonths: last6Months,
                 monthlyData,
@@ -741,13 +864,13 @@
         // Update forecast visualization
         function updateForecast() {
             const forecast = generateForecast();
-            
+
             // Prepare chart data
             const labels = [...forecast.historicalMonths.map(formatMonth), ...forecast.futureMonths.map(formatMonth)];
             const incomeData = [];
             const expensesData = [];
             const balanceData = [];
-            
+
             // Historical data
             forecast.historicalMonths.forEach(month => {
                 const data = forecast.monthlyData[month] || { income: 0, expenses: 0 };
@@ -755,19 +878,19 @@
                 expensesData.push(data.expenses);
                 balanceData.push(data.income - data.expenses);
             });
-            
+
             // Forecast data
             forecast.futureMonths.forEach(() => {
                 incomeData.push(forecast.avgIncome);
                 expensesData.push(forecast.avgExpenses);
                 balanceData.push(forecast.avgBalance);
             });
-            
+
             // Render chart
             if (forecastChart) {
                 forecastChart.destroy();
             }
-            
+
             const ctx = document.getElementById('forecastChart').getContext('2d');
             forecastChart = new Chart(ctx, {
                 type: 'line',
@@ -797,7 +920,7 @@
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             fill: true,
                             tension: 0.4,
-                            borderDash: balanceData.map((_, i) => 
+                            borderDash: balanceData.map((_, i) =>
                                 i >= forecast.historicalMonths.length ? [5, 5] : []
                             )
                         }
@@ -812,7 +935,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const isPrediction = context.dataIndex >= forecast.historicalMonths.length;
                                     const prefix = isPrediction ? '(Prev.) ' : '';
                                     return prefix + context.dataset.label + ': €' + context.parsed.y.toFixed(2);
@@ -824,7 +947,7 @@
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return '€' + value.toFixed(0);
                                 }
                             }
@@ -832,7 +955,7 @@
                     }
                 }
             });
-            
+
             // Render forecast details
             renderForecastDetails(forecast);
         }
@@ -840,10 +963,10 @@
         // Render forecast details cards
         function renderForecastDetails(forecast) {
             const container = document.getElementById('forecastDetails');
-            
+
             const savings = forecast.avgBalance * forecast.futureMonths.length;
             const savingsClass = savings > 0 ? 'text-green-600' : 'text-red-600';
-            
+
             container.innerHTML = `
                 <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
                     <div class="text-sm text-gray-600 mb-1">📈 Entrate Medie Mensili</div>
@@ -882,7 +1005,7 @@
         // ============================================
         // RECEIPT SCANNER (OCR)
         // ============================================
-        
+
         // Open receipt scanner modal
         function openReceiptScanner() {
             const modal = document.getElementById('receiptScannerModal');
@@ -892,7 +1015,7 @@
             document.querySelector('input[name="type"][value="expense"]').checked = true;
             updateCategorySelect();
         }
-        
+
         // Close receipt scanner modal
         function closeReceiptScanner() {
             const modal = document.getElementById('receiptScannerModal');
@@ -900,7 +1023,7 @@
             modal.classList.add('hidden');
             resetReceiptScanner();
         }
-        
+
         // Reset receipt scanner to initial state
         function resetReceiptScanner() {
             document.getElementById('receiptUploadSection').classList.remove('hidden');
@@ -912,29 +1035,29 @@
             document.getElementById('receiptCameraInput').value = '';
             document.getElementById('receiptProgressBar').style.width = '0%';
         }
-        
+
         // Handle receipt image upload
         async function handleReceiptImage(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             // Show preview
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 document.getElementById('receiptPreview').src = e.target.result;
                 document.getElementById('receiptPreviewSection').classList.remove('hidden');
                 document.getElementById('receiptUploadSection').classList.add('hidden');
-                
+
                 // Start OCR processing
                 await processReceiptOCR(e.target.result);
             };
             reader.readAsDataURL(file);
         }
-        
+
         // Process receipt with OCR
         async function processReceiptOCR(imageData) {
             document.getElementById('receiptProcessingSection').classList.remove('hidden');
-            
+
             try {
                 const worker = await Tesseract.createWorker('ita', 1, {
                     logger: progress => {
@@ -947,17 +1070,17 @@
                         }
                     }
                 });
-                
+
                 const result = await worker.recognize(imageData);
                 await worker.terminate();
-                
+
                 // Parse the extracted text
                 const extractedData = parseReceiptText(result.data.text);
-                
+
                 // Show results
                 document.getElementById('receiptProcessingSection').classList.add('hidden');
                 document.getElementById('receiptResultsSection').classList.remove('hidden');
-                
+
                 // Populate extracted data fields
                 if (extractedData.amount) {
                     document.getElementById('extractedAmount').value = extractedData.amount;
@@ -968,7 +1091,7 @@
                 if (extractedData.description) {
                     document.getElementById('extractedDescription').value = extractedData.description;
                 }
-                
+
             } catch (error) {
                 console.error('OCR Error:', error);
                 document.getElementById('receiptProcessingSection').classList.add('hidden');
@@ -976,14 +1099,14 @@
                 document.getElementById('receiptErrorText').textContent = 'Impossibile elaborare l\'immagine. Assicurati che sia leggibile e riprova.';
             }
         }
-        
+
         // Parse receipt text to extract amount, date, and description
         function parseReceiptText(text) {
             const result = { amount: null, date: null, description: null };
             const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            
+
             console.log('OCR Text:', text); // Debug
-            
+
             // Extract AMOUNT - look for total patterns
             const amountPatterns = [
                 /(?:TOTALE|TOTAL|TOT\.?|IMPORTO|EURO|EUR|€)\s*[:.]?\s*([0-9]+[.,][0-9]{2})/i,
@@ -992,7 +1115,7 @@
                 /\*{2,}\s*([0-9]+[.,][0-9]{2})/,  // **12.50 pattern often used for totals
                 /([0-9]+[.,][0-9]{2})\s*$/m  // Amount at end of line
             ];
-            
+
             // First try to find TOTALE specifically
             for (const line of lines) {
                 if (/TOTALE|TOTAL|TOT\./i.test(line)) {
@@ -1003,7 +1126,7 @@
                     }
                 }
             }
-            
+
             // If not found, try other patterns
             if (!result.amount) {
                 for (const pattern of amountPatterns) {
@@ -1014,19 +1137,19 @@
                     }
                 }
             }
-            
+
             // Extract DATE
             const datePatterns = [
                 /([0-3]?[0-9])[\/-]([0-1]?[0-9])[\/-](20[0-9]{2}|[0-9]{2})/,  // DD/MM/YYYY or DD-MM-YYYY
                 /(20[0-9]{2})[\/-]([0-1]?[0-9])[\/-]([0-3]?[0-9])/,  // YYYY-MM-DD
                 /([0-3]?[0-9])\s+(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)[a-z]*\.?\s*(20[0-9]{2}|[0-9]{2})/i
             ];
-            
+
             for (const pattern of datePatterns) {
                 const match = text.match(pattern);
                 if (match) {
                     let day, month, year;
-                    
+
                     if (pattern.source.includes('gen|feb')) {
                         // Month name pattern
                         day = match[1].padStart(2, '0');
@@ -1044,12 +1167,12 @@
                         month = match[2].padStart(2, '0');
                         year = match[3].length === 2 ? '20' + match[3] : match[3];
                     }
-                    
+
                     result.date = `${year}-${month}-${day}`;
                     break;
                 }
             }
-            
+
             // Extract DESCRIPTION - use first meaningful line (store name)
             const skipWords = ['scontrino', 'fiscale', 'n.', 'nr', 'documento', 'ricevuta', 'cassa'];
             for (const line of lines.slice(0, 5)) {
@@ -1060,20 +1183,20 @@
                     break;
                 }
             }
-            
+
             if (!result.description) {
                 result.description = 'Acquisto da scontrino';
             }
-            
+
             return result;
         }
-        
+
         // Apply extracted data to the transaction form
         function applyReceiptData() {
             const amount = document.getElementById('extractedAmount').value;
             const date = document.getElementById('extractedDate').value;
             const description = document.getElementById('extractedDescription').value;
-            
+
             if (amount) {
                 document.getElementById('amount').value = parseFloat(amount.replace(',', '.'));
             }
@@ -1083,10 +1206,10 @@
             if (description) {
                 document.getElementById('description').value = description;
             }
-            
+
             closeReceiptScanner();
         }
-        
+
         // Expose receipt scanner functions to window
         window.openReceiptScanner = openReceiptScanner;
         window.closeReceiptScanner = closeReceiptScanner;
@@ -1098,4 +1221,5 @@
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
+
 </html>
