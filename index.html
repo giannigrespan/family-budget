@@ -7,6 +7,7 @@
     <title>Budget Familiare</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         .category-card {
             transition: all 0.3s ease;
@@ -50,7 +51,12 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Add Transaction Form -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">➕ Nuova Transazione</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">➕ Nuova Transazione</h2>
+                    <button type="button" onclick="openReceiptScanner()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition flex items-center gap-2">
+                        📷 Scansiona Scontrino
+                    </button>
+                </div>
                 <form id="transactionForm">
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Tipo</label>
@@ -157,6 +163,101 @@
             <h2 class="text-xl font-bold text-gray-800 mb-4">🏷️ Gestione Categorie</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="categoriesList">
                 <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Scanner Modal -->
+    <div id="receiptScannerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">📷 Scansiona Scontrino</h3>
+                <button onclick="closeReceiptScanner()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <!-- Upload Options -->
+            <div id="receiptUploadSection" class="space-y-4">
+                <p class="text-gray-600 text-sm">Carica una foto dello scontrino per estrarre automaticamente i dati.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <div class="bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 rounded-lg p-6 text-center transition">
+                            <div class="text-4xl mb-2">📁</div>
+                            <div class="text-blue-600 font-semibold">Carica Immagine</div>
+                            <div class="text-gray-500 text-sm">JPG, PNG, HEIC</div>
+                        </div>
+                        <input type="file" id="receiptFileInput" accept="image/*" class="hidden" onchange="handleReceiptImage(event)">
+                    </label>
+                    
+                    <label class="flex-1 cursor-pointer">
+                        <div class="bg-green-50 hover:bg-green-100 border-2 border-dashed border-green-300 rounded-lg p-6 text-center transition">
+                            <div class="text-4xl mb-2">📸</div>
+                            <div class="text-green-600 font-semibold">Scatta Foto</div>
+                            <div class="text-gray-500 text-sm">Usa la fotocamera</div>
+                        </div>
+                        <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleReceiptImage(event)">
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Image Preview -->
+            <div id="receiptPreviewSection" class="hidden mt-4">
+                <img id="receiptPreview" class="w-full rounded-lg border border-gray-200" alt="Anteprima scontrino">
+            </div>
+            
+            <!-- Processing Progress -->
+            <div id="receiptProcessingSection" class="hidden mt-4">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <span class="text-blue-800 font-semibold">Elaborazione in corso...</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-2">
+                        <div id="receiptProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="receiptProgressText" class="text-blue-600 text-sm mt-2">Inizializzazione OCR...</p>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div id="receiptResultsSection" class="hidden mt-4">
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <h4 class="font-bold text-green-800 mb-3">✅ Dati Estratti</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-1">Importo</label>
+                            <input type="text" id="extractedAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-1">Data</label>
+                            <input type="date" id="extractedDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-1">Descrizione</label>
+                            <input type="text" id="extractedDescription" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Non rilevato">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-4">
+                    <button onclick="applyReceiptData()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                        ✓ Applica al Form
+                    </button>
+                    <button onclick="resetReceiptScanner()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded-lg transition">
+                        ↺ Nuova Scansione
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Error Section -->
+            <div id="receiptErrorSection" class="hidden mt-4">
+                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <h4 class="font-bold text-red-800 mb-2">❌ Errore</h4>
+                    <p id="receiptErrorText" class="text-red-600"></p>
+                    <button onclick="resetReceiptScanner()" class="mt-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Riprova
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -777,6 +878,221 @@
         // Expose functions to window for onclick handlers
         window.updateForecast = updateForecast;
         window.deleteTransaction = deleteTransaction;
+
+        // ============================================
+        // RECEIPT SCANNER (OCR)
+        // ============================================
+        
+        // Open receipt scanner modal
+        function openReceiptScanner() {
+            const modal = document.getElementById('receiptScannerModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            // Set transaction type to expense by default for receipts
+            document.querySelector('input[name="type"][value="expense"]').checked = true;
+            updateCategorySelect();
+        }
+        
+        // Close receipt scanner modal
+        function closeReceiptScanner() {
+            const modal = document.getElementById('receiptScannerModal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+            resetReceiptScanner();
+        }
+        
+        // Reset receipt scanner to initial state
+        function resetReceiptScanner() {
+            document.getElementById('receiptUploadSection').classList.remove('hidden');
+            document.getElementById('receiptPreviewSection').classList.add('hidden');
+            document.getElementById('receiptProcessingSection').classList.add('hidden');
+            document.getElementById('receiptResultsSection').classList.add('hidden');
+            document.getElementById('receiptErrorSection').classList.add('hidden');
+            document.getElementById('receiptFileInput').value = '';
+            document.getElementById('receiptCameraInput').value = '';
+            document.getElementById('receiptProgressBar').style.width = '0%';
+        }
+        
+        // Handle receipt image upload
+        async function handleReceiptImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                document.getElementById('receiptPreview').src = e.target.result;
+                document.getElementById('receiptPreviewSection').classList.remove('hidden');
+                document.getElementById('receiptUploadSection').classList.add('hidden');
+                
+                // Start OCR processing
+                await processReceiptOCR(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Process receipt with OCR
+        async function processReceiptOCR(imageData) {
+            document.getElementById('receiptProcessingSection').classList.remove('hidden');
+            
+            try {
+                const worker = await Tesseract.createWorker('ita', 1, {
+                    logger: progress => {
+                        if (progress.status === 'recognizing text') {
+                            const percent = Math.round(progress.progress * 100);
+                            document.getElementById('receiptProgressBar').style.width = percent + '%';
+                            document.getElementById('receiptProgressText').textContent = `Riconoscimento testo: ${percent}%`;
+                        } else {
+                            document.getElementById('receiptProgressText').textContent = progress.status;
+                        }
+                    }
+                });
+                
+                const result = await worker.recognize(imageData);
+                await worker.terminate();
+                
+                // Parse the extracted text
+                const extractedData = parseReceiptText(result.data.text);
+                
+                // Show results
+                document.getElementById('receiptProcessingSection').classList.add('hidden');
+                document.getElementById('receiptResultsSection').classList.remove('hidden');
+                
+                // Populate extracted data fields
+                if (extractedData.amount) {
+                    document.getElementById('extractedAmount').value = extractedData.amount;
+                }
+                if (extractedData.date) {
+                    document.getElementById('extractedDate').value = extractedData.date;
+                }
+                if (extractedData.description) {
+                    document.getElementById('extractedDescription').value = extractedData.description;
+                }
+                
+            } catch (error) {
+                console.error('OCR Error:', error);
+                document.getElementById('receiptProcessingSection').classList.add('hidden');
+                document.getElementById('receiptErrorSection').classList.remove('hidden');
+                document.getElementById('receiptErrorText').textContent = 'Impossibile elaborare l\'immagine. Assicurati che sia leggibile e riprova.';
+            }
+        }
+        
+        // Parse receipt text to extract amount, date, and description
+        function parseReceiptText(text) {
+            const result = { amount: null, date: null, description: null };
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            console.log('OCR Text:', text); // Debug
+            
+            // Extract AMOUNT - look for total patterns
+            const amountPatterns = [
+                /(?:TOTALE|TOTAL|TOT\.?|IMPORTO|EURO|EUR|€)\s*[:.]?\s*([0-9]+[.,][0-9]{2})/i,
+                /([0-9]+[.,][0-9]{2})\s*(?:€|EUR|EURO)/i,
+                /€\s*([0-9]+[.,][0-9]{2})/,
+                /\*{2,}\s*([0-9]+[.,][0-9]{2})/,  // **12.50 pattern often used for totals
+                /([0-9]+[.,][0-9]{2})\s*$/m  // Amount at end of line
+            ];
+            
+            // First try to find TOTALE specifically
+            for (const line of lines) {
+                if (/TOTALE|TOTAL|TOT\./i.test(line)) {
+                    const match = line.match(/([0-9]+[.,][0-9]{2})/);
+                    if (match) {
+                        result.amount = match[1].replace(',', '.');
+                        break;
+                    }
+                }
+            }
+            
+            // If not found, try other patterns
+            if (!result.amount) {
+                for (const pattern of amountPatterns) {
+                    const match = text.match(pattern);
+                    if (match) {
+                        result.amount = match[1].replace(',', '.');
+                        break;
+                    }
+                }
+            }
+            
+            // Extract DATE
+            const datePatterns = [
+                /([0-3]?[0-9])[\/-]([0-1]?[0-9])[\/-](20[0-9]{2}|[0-9]{2})/,  // DD/MM/YYYY or DD-MM-YYYY
+                /(20[0-9]{2})[\/-]([0-1]?[0-9])[\/-]([0-3]?[0-9])/,  // YYYY-MM-DD
+                /([0-3]?[0-9])\s+(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)[a-z]*\.?\s*(20[0-9]{2}|[0-9]{2})/i
+            ];
+            
+            for (const pattern of datePatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    let day, month, year;
+                    
+                    if (pattern.source.includes('gen|feb')) {
+                        // Month name pattern
+                        day = match[1].padStart(2, '0');
+                        const monthNames = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+                        month = String(monthNames.findIndex(m => match[2].toLowerCase().startsWith(m)) + 1).padStart(2, '0');
+                        year = match[3].length === 2 ? '20' + match[3] : match[3];
+                    } else if (match[1].length === 4) {
+                        // YYYY-MM-DD format
+                        year = match[1];
+                        month = match[2].padStart(2, '0');
+                        day = match[3].padStart(2, '0');
+                    } else {
+                        // DD/MM/YYYY format
+                        day = match[1].padStart(2, '0');
+                        month = match[2].padStart(2, '0');
+                        year = match[3].length === 2 ? '20' + match[3] : match[3];
+                    }
+                    
+                    result.date = `${year}-${month}-${day}`;
+                    break;
+                }
+            }
+            
+            // Extract DESCRIPTION - use first meaningful line (store name)
+            const skipWords = ['scontrino', 'fiscale', 'n.', 'nr', 'documento', 'ricevuta', 'cassa'];
+            for (const line of lines.slice(0, 5)) {
+                const lowerLine = line.toLowerCase();
+                const isSkip = skipWords.some(word => lowerLine.includes(word));
+                if (!isSkip && line.length >= 3 && !/^[0-9\s\-\/.:]+$/.test(line)) {
+                    result.description = line.substring(0, 50);
+                    break;
+                }
+            }
+            
+            if (!result.description) {
+                result.description = 'Acquisto da scontrino';
+            }
+            
+            return result;
+        }
+        
+        // Apply extracted data to the transaction form
+        function applyReceiptData() {
+            const amount = document.getElementById('extractedAmount').value;
+            const date = document.getElementById('extractedDate').value;
+            const description = document.getElementById('extractedDescription').value;
+            
+            if (amount) {
+                document.getElementById('amount').value = parseFloat(amount.replace(',', '.'));
+            }
+            if (date) {
+                document.getElementById('date').value = date;
+            }
+            if (description) {
+                document.getElementById('description').value = description;
+            }
+            
+            closeReceiptScanner();
+        }
+        
+        // Expose receipt scanner functions to window
+        window.openReceiptScanner = openReceiptScanner;
+        window.closeReceiptScanner = closeReceiptScanner;
+        window.resetReceiptScanner = resetReceiptScanner;
+        window.handleReceiptImage = handleReceiptImage;
+        window.applyReceiptData = applyReceiptData;
 
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
