@@ -342,6 +342,32 @@
             populateMonthFilter();
         }
 
+        // Storage Helper - Robust fallback for different environments
+        const db = {
+            async get(key) {
+                try {
+                    if (window.storage && typeof window.storage.get === 'function') {
+                        return await window.storage.get(key);
+                    }
+                    return { value: localStorage.getItem(key) };
+                } catch (e) {
+                    console.warn('Storage get error:', e);
+                    return { value: localStorage.getItem(key) };
+                }
+            },
+            async set(key, value) {
+                try {
+                    if (window.storage && typeof window.storage.set === 'function') {
+                        return await window.storage.set(key, value);
+                    }
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    console.warn('Storage set error:', e);
+                    localStorage.setItem(key, value);
+                }
+            }
+        };
+
         // Update storage indicator
         function updateStorageIndicator() {
             const indicator = document.getElementById('storageIndicator');
@@ -364,8 +390,18 @@
 
         // Load data from storage
         async function loadData() {
+            // 1. Load categories first (local)
+            try {
+                const storedIncome = await db.get('family-budget-income-categories');
+                const storedExpense = await db.get('family-budget-expense-categories');
+                if (storedIncome && storedIncome.value) incomeCategories = JSON.parse(storedIncome.value);
+                if (storedExpense && storedExpense.value) expenseCategories = JSON.parse(storedExpense.value);
+            } catch (error) {
+                console.warn('Error loading categories, using defaults', error);
+            }
+
+            // 2. Load transactions
             if (USE_N8N_STORAGE) {
-                // Load from Google Sheets via n8n
                 try {
                     const response = await fetch(N8N_WEBHOOK_URL, {
                         method: 'POST',
@@ -373,38 +409,23 @@
                         body: JSON.stringify({ operation: 'load' })
                     });
 
-                    if (!response.ok) {
-                        throw new Error('Failed to load from n8n');
-                    }
+                    if (!response.ok) throw new Error('Failed to load from n8n');
 
                     const data = await response.json();
                     transactions = data.transactions || [];
-
-                    // Note: In a real app categories would also be in Google Sheets
-                    // For now we persist them locally even when using n8n for transactions
-                    const storedIncome = await window.storage.get('family-budget-income-categories');
-                    const storedExpense = await window.storage.get('family-budget-expense-categories');
-                    if (storedIncome && storedIncome.value) incomeCategories = JSON.parse(storedIncome.value);
-                    if (storedExpense && storedExpense.value) expenseCategories = JSON.parse(storedExpense.value);
                 } catch (error) {
                     console.error('Error loading from n8n:', error);
                     alert('Errore nel caricamento dei dati da Google Sheets. Verificare la connessione n8n.');
                     transactions = [];
                 }
             } else {
-                // Load from local storage
                 try {
-                    const result = await window.storage.get('family-budget-transactions');
+                    const result = await db.get('family-budget-transactions');
                     if (result && result.value) {
                         transactions = JSON.parse(result.value);
                     }
-
-                    const storedIncome = await window.storage.get('family-budget-income-categories');
-                    const storedExpense = await window.storage.get('family-budget-expense-categories');
-                    if (storedIncome && storedIncome.value) incomeCategories = JSON.parse(storedIncome.value);
-                    if (storedExpense && storedExpense.value) expenseCategories = JSON.parse(storedExpense.value);
                 } catch (error) {
-                    console.log('No previous data found, starting fresh');
+                    console.log('No previous transactions found', error);
                     transactions = [];
                 }
             }
@@ -412,24 +433,17 @@
 
         // Save categories to storage
         async function saveCategories() {
-            try {
-                await window.storage.set('family-budget-income-categories', JSON.stringify(incomeCategories));
-                await window.storage.set('family-budget-expense-categories', JSON.stringify(expenseCategories));
-            } catch (error) {
-                console.error('Error saving categories:', error);
-            }
+            await db.set('family-budget-income-categories', JSON.stringify(incomeCategories));
+            await db.set('family-budget-expense-categories', JSON.stringify(expenseCategories));
         }
 
         // Save data to storage
         async function saveData() {
             if (USE_N8N_STORAGE) {
-                // Save to Google Sheets via n8n is handled per transaction
-                // No need to save all transactions at once
                 return;
             } else {
-                // Save to local storage
                 try {
-                    await window.storage.set('family-budget-transactions', JSON.stringify(transactions));
+                    await db.set('family-budget-transactions', JSON.stringify(transactions));
                 } catch (error) {
                     console.error('Error saving data:', error);
                     alert('Errore nel salvare i dati');
